@@ -58,6 +58,7 @@
         }
 
         .main-content h2 { color: var(--primary-color); margin-top: 0; }
+        .main-content h3 { color: var(--accent-color); margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
 
         .math-block {
             background: #f8f9fa;
@@ -75,6 +76,23 @@
             color: #888;
             font-weight: bold;
             margin-bottom: 0.5rem;
+        }
+
+        .real-world-box {
+            background: #eef2f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #2c3e50;
+        }
+
+        .badge {
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         /* Sidebar Styles */
@@ -101,9 +119,7 @@
             margin: 0;
         }
 
-        .nav-list li {
-            margin-bottom: 12px;
-        }
+        .nav-list li { margin-bottom: 12px; }
 
         .nav-list a {
             text-decoration: none;
@@ -145,14 +161,9 @@
             border-top: 1px solid #ddd;
         }
 
-        /* Mobile Responsiveness */
         @media (max-width: 800px) {
-            .layout-grid {
-                grid-template-columns: 1fr;
-            }
-            .sidebar {
-                position: static;
-            }
+            .layout-grid { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
         }
     </style>
 </head>
@@ -165,7 +176,7 @@
 
     <div class="layout-grid">
 
-        <!-- LEFT COLUMN: The Mathematics -->
+        <!-- LEFT COLUMN: The Mathematics & Real World Use -->
         <div class="main-content">
             <h2>The Core Mathematics</h2>
             <p>Standard Bayesian conjugate models assume a <strong>stationary environment</strong> (the underlying data never changes). While mathematically optimal, they accumulate so much historical precision that they become completely rigid.</p>
@@ -203,6 +214,66 @@
             </div>
 
             <p>By sacrificing pure Bayesian optimality, we gain the agility to track moving targets, changing click-through rates, and dynamic server loads—the exact techniques used in modern Kalman Filters and Multi-Armed Bandits.</p>
+
+            <h2 style="margin-top: 3rem;">Real-World Applications</h2>
+            <p>Each model in this series is tailored to a specific type of data. Here is how they are applied in the real world:</p>
+
+            <!-- Chapter 1 -->
+            <div class="real-world-box">
+                <strong>1. Poisson-Gamma:</strong> <span class="badge" style="background: #3498db;">Discrete</span> <br>
+                <strong>Measures:</strong> Event counts in a fixed timeframe.<br>
+                <strong>Use:</strong> Telecommunications (calls per minute), web analytics (server requests per second), and retail (customers entering a store per hour).
+            </div>
+
+            <!-- Chapter 2 -->
+            <div class="real-world-box">
+                <strong>2. Binomial-Beta:</strong> <span class="badge" style="background: #27ae60;">Discrete</span> <br>
+                <strong>Measures:</strong> Success rates (proportions).<br>
+                <strong>Use:</strong> The gold standard for A/B testing. Used to model click-through rates (CTR) on ads, email open rates, and medical treatment success probabilities.
+            </div>
+
+            <!-- Chapter 3 -->
+            <div class="real-world-box">
+                <strong>3. Geometric-Beta:</strong> <span class="badge" style="background: #8e44ad;">Discrete</span> <br>
+                <strong>Measures:</strong> Discrete time/steps (Failures before the 1st success).<br>
+                <strong>Use:</strong> Modeling user patience. Examples include clicks before abandoning a webpage, products inspected before finding a defect, or free throws missed before scoring.
+            </div>
+
+            <!-- Chapter 4 -->
+            <div class="real-world-box">
+                <strong>4. Exponential-Gamma:</strong> <span class="badge" style="background: #d35400;">Continuous</span> <br>
+                <strong>Measures:</strong> Continuous time (Time between events).<br>
+                <strong>Use:</strong> Reliability engineering and system monitoring. Used to measure the time until a server crashes, the lifespan of a lightbulb, or the time between API requests.
+            </div>
+
+            <!-- Chapter 5 -->
+            <div class="real-world-box">
+                <strong>5. Normal-Normal:</strong> <span class="badge" style="background: #c0392b;">Continuous</span> <br>
+                <strong>Measures:</strong> Continuous measurements & means.<br>
+                <strong>Use:</strong> Industrial quality control (average temperature of a reactor), finance (average stock price), and healthcare (average heart rate of a patient).
+            </div>
+
+            <!-- Chapter 6 -->
+            <div class="real-world-box">
+                <strong>6. Bivariate Normal:</strong> <span class="badge" style="background: #2980b9;">Continuous</span> <br>
+                <strong>Measures:</strong> 2D spatial coordinates (X, Y).<br>
+                <strong>Use:</strong> Tracking moving objects in 2D space. Used in GPS navigation, radar systems tracking aircraft, and self-driving cars tracking surrounding vehicles.
+            </div>
+
+            <!-- Chapter 7 -->
+            <div class="real-world-box">
+                <strong>7. Multinomial-Dirichlet:</strong> <span class="badge" style="background: #16a085;">Discrete</span> <br>
+                <strong>Measures:</strong> Multi-category success rates.<br>
+                <strong>Use:</strong> Used whenever there are more than two outcomes. Powers Natural Language Processing (topic modeling), email sorting (Spam, Promotions, Primary), and UI/UX tracking.
+            </div>
+
+            <!-- Chapter 8 -->
+            <div class="real-world-box">
+                <strong>8. Negative Binomial:</strong> <span class="badge" style="background: #4b0082;">Discrete</span> <br>
+                <strong>Measures:</strong> Discrete time/steps (Failures before \(r\) successes).<br>
+                <strong>Use:</strong> Used when a process must hit a specific target. Modeling accident-free months before a driver files 3 claims, or users seeing an ad before achieving 5 conversions.
+            </div>
+
         </div>
 
         <!-- RIGHT COLUMN: Compact Links -->
@@ -214,8 +285,8 @@
                 <li><a href="html_files/Chapter3Geometric.html">Geometric-Beta <span class="chapter-badge">03</span></a></li>
                 <li><a href="html_files/Chapter4Exponential.html">Exponential-Gamma <span class="chapter-badge">04</span></a></li>
                 <li><a href="html_files/Chapter5Normal.html">Normal-Normal <span class="chapter-badge">05</span></a></li>
-                <li><a href="html_files/Chapter6BivariateNormal.html">Bivariate Normal <span class="chapter-badge">06</span></a></li>
-                <li><a href="html_files/Chapter7MultivariateNormal.html">Multinomial-Dirichlet <span class="chapter-badge">07</span></a></li>
+                <li><a href="html_files/Chapter6Bivariate.html">Bivariate Normal <span class="chapter-badge">06</span></a></li>
+                <li><a href="html_files/Chapter7Dirichlet.html">Multinomial-Dirichlet <span class="chapter-badge">07</span></a></li>
                 <li><a href="html_files/Chapter8NegativeBinomial.html">Negative Binomial <span class="chapter-badge">08</span></a></li>
             </ul>
         </div>
