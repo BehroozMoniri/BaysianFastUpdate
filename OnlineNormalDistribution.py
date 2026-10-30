@@ -32,20 +32,31 @@ from scipy.stats import norm
 #         return lower_bound, upper_bound
 
 
-class OnlineNormalModel:
-    def __init__(self, mu_prior=0.0, var_prior=100.0, known_var=16.0, forgetting_factor=0.85):
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+import os
+
+# Ensure the images directory exists
+os.makedirs('images', exist_ok=True)
+
+
+class FastOnlineNormalModel:
+    def __init__(self, mu_prior=0.0, var_prior=100.0, known_var=16.0, forgetting_factor=1.0):
         self.mu = mu_prior
         self.var = var_prior
         self.known_var = known_var
         self.ff = forgetting_factor
 
     def update(self, x):
+        # Convert variances to precisions (1/variance)
         prior_precision = 1.0 / self.var
-        # Discount the prior precision (inflate old variance)
+
+        # Apply forgetting factor to prior precision (inflate variance)
         discounted_precision = prior_precision * self.ff
         data_precision = 1.0 / self.known_var
 
-        # Calculate new precision and variance
+        # Calculate new precision and new variance
         new_precision = discounted_precision + data_precision
         self.var = 1.0 / new_precision
 
@@ -58,61 +69,58 @@ class OnlineNormalModel:
         std_dev = np.sqrt(self.var)
         return norm.ppf(lp, loc=self.mu, scale=std_dev), norm.ppf(up, loc=self.mu, scale=std_dev)
 
-# 1. GENERATE SYNTHETIC DATA
+
+# 1. GENERATE DATA (True mean jumps from 10 to 25 at step 50)
 np.random.seed(42)
 n_steps = 100
-true_var = 16.0  # Measurement noise (standard deviation of 4)
-
-true_mean_phase1 = 10
-true_mean_phase2 = 25
+true_mu_phase1 = 10
+true_mu_phase2 = 25
+true_var = 16.0  # Known measurement noise (standard deviation of 4)
 
 data_list = []
 for i in range(n_steps):
-    if i < 50:
-        data_list.append(np.random.normal(true_mean_phase1, np.sqrt(true_var)))
-    else:
-        data_list.append(np.random.normal(true_mean_phase2, np.sqrt(true_var)))
+    true_mu = true_mu_phase1 if i < 50 else true_mu_phase2
+    data_list.append(np.random.normal(true_mu, np.sqrt(true_var)))
 
-# 2. INITIALIZE MODEL
-# We start with a very weak prior (mu=0, variance=100, meaning we have no idea)
-model = OnlineNormalModel(mu_prior=0.0, var_prior=100.0, known_var=true_var)
+# 2. INITIALIZE MODELS
+# Standard Model (No forgetting)
+standard_model = FastOnlineNormalModel(0, 100, true_var, forgetting_factor=1.0)
+# Fast Model (Forgetting old data)
+fast_model = FastOnlineNormalModel(0, 100, true_var, forgetting_factor=0.85)
 
-# Lists to store history for plotting
-expected_means = []
-lower_bounds = []
-upper_bounds = []
+# Lists for plotting
+std_means, fast_means = [], []
+fast_lb, fast_ub = [], []
 
-# 3. UPDATE MODEL IN A LOOP
+# 3. RUN SIMULATION
 for x in data_list:
-    model.update(x)
+    standard_model.update(x)
+    fast_model.update(x)
 
-    expected_means.append(model.mu)
-    lb, ub = model.get_credible_interval(0.95)
-    lower_bounds.append(lb)
-    upper_bounds.append(ub)
+    std_means.append(standard_model.mu)
+    fast_means.append(fast_model.mu)
 
-# 4. PLOT THE RESULTS
+    lb, ub = fast_model.get_credible_interval()
+    fast_lb.append(lb);
+    fast_ub.append(ub)
+
+# 4. PLOT
 plt.figure(figsize=(12, 6))
+plt.scatter(range(1, n_steps + 1), data_list, alpha=0.3, color='gray', label='Noisy Observations')
+plt.plot(range(1, n_steps + 1), [10] * 50 + [25] * 50, 'k--', linewidth=2, label='True Mean')
 
-# Plot the raw data points
-plt.scatter(range(1, n_steps + 1), data_list, alpha=0.3, color='gray', label='Raw Observations (Noisy Data)')
+# Plot BOTH models for comparison
+plt.plot(range(1, n_steps + 1), std_means, 'b-', linewidth=2, alpha=0.5, label='Standard Bayes (Slow)')
+plt.plot(range(1, n_steps + 1), fast_means, 'r-', linewidth=2.5, label='Forgetting Model (Fast)')
+plt.fill_between(range(1, n_steps + 1), fast_lb, fast_ub, color='red', alpha=0.15, label='Fast Model 95% CI')
 
-# Plot the true underlying mean
-plt.plot(range(1, n_steps + 1), [true_mean_phase1] * 50 + [true_mean_phase2] * 50,
-         'k--', linewidth=2, label='True Mean')
-
-# Plot the model's evolving expected mean
-plt.plot(range(1, n_steps + 1), expected_means, 'r-', linewidth=2, label='Model Estimated Mean')
-
-# Plot the 95% Credible Interval for the MEAN
-plt.fill_between(range(1, n_steps + 1), lower_bounds, upper_bounds,
-                 color='red', alpha=0.2, label='95% Credible Interval')
-
-plt.title('Self-Updating Online Normal Model (Estimating the Mean)', fontsize=14)
-plt.xlabel('Time Step', fontsize=12)
-plt.ylabel(r'Value (\(x\))', fontsize=12)
+plt.title('Speeding up Normal-Normal Learning via Precision Discounting', fontsize=14)
+plt.xlabel('Time Step')
+plt.ylabel(r'Value (\(x\))')
 plt.legend(loc='upper left')
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
+
+# Save to the images folder
 plt.savefig('images/normal_graph.png', dpi=300, bbox_inches='tight')
 plt.show()
