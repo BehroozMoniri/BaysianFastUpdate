@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Bayesian Models with Forgetting</title>
+
+    <!-- MathJax for LaTeX rendering (for the introduction text) -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem 2rem;
+        }
+
+        .intro-text {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+            border-left: 6px solid var(--accent-color);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .chapter-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            border-top: 5px solid transparent;
+        }
+
+        .chapter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-top-color: var(--accent-color);
+        }
+
+        .chapter-number {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .chapter-title {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+        }
+
+        .chapter-desc {
+            font-size: 0.95rem;
+            color: #666;
+            flex-grow: 1;
+        }
+
+        .read-more {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            display: inline-block;
+        }
+
+        .chapter-card:hover .read-more {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dynamic Bayesian Updating</h1>
+        <p>Building adaptive machine learning models with Exponential Forgetting</p>
+    </header>
+
+    <div class="container">
+
+        <div class="intro-text">
+            <h2>About this Series</h2>
+            <p>Standard Bayesian conjugate models (like Beta-Binomial or Normal-Normal) are mathematically optimal for <em>stationary</em> environments—meaning the underlying data never changes. However, in real-world machine learning, user behavior shifts, servers slow down, and targets move.</p>
+            <p>This series demonstrates how to introduce an <strong>exponential forgetting factor</strong> (and matrix precision discounting) to force models to "forget" outdated data. By sacrificing pure optimality, we gain the agility to track non-stationary data streams in real-time.</p>
+        </div>
+
+        <div class="grid-container">
+
+            <!-- Chapter 1 -->
+            <a href="html_files/Chapter1Poisson.html" class="chapter-card">
+                <div class="chapter-number">Chapter 1</div>
+                <h2 class="chapter-title">Poisson-Gamma</h2>
+                <p class="chapter-desc">Modeling event counts (e.g., server requests) and tracking sudden changes in arrival rates.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 2 -->
+            <a href="html_files/Chapter2Binomial.html" class="chapter-card">
+                <div class="chapter-number">Chapter 2</div>
+                <h2 class="chapter-title">Binomial-Beta</h2>
+                <p class="chapter-desc">Modeling success rates (e.g., ad click-through rates) and adapting to user behavior shifts.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 3 -->
+            <a href="html_files/Chapter3Geometric.html" class="chapter-card">
+                <div class="chapter-number">Chapter 3</div>
+                <h2 class="chapter-title">Geometric-Beta</h2>
+                <p class="chapter-desc">Modeling discrete wait times (e.g., failures before a click) and tracking user patience.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 4 -->
+            <a href="html_files/Chapter4Exponential.html" class="chapter-card">
+                <div class="chapter-number">Chapter 4</div>
+                <h2 class="chapter-title">Exponential-Gamma</h2>
+                <p class="chapter-desc">Modeling continuous wait times (e.g., time between API requests) and detecting system slowdowns.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 5 -->
+            <a href="html_files/Chapter5Normal.html" class="chapter-card">
+                <div class="chapter-number">Chapter 5</div>
+                <h2 class="chapter-title">Normal-Normal</h2>
+                <p class="chapter-desc">Modeling continuous data (e.g., temperature, prices) using precision discounting.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 6 -->
+            <a href="html_files/Chapter6Bivariate.html" class="chapter-card">
+                <div class="chapter-number">Chapter 6</div>
+                <h2 class="chapter-title">Bivariate Normal</h2>
+                <p class="chapter-desc">Tracking moving targets in 2D space using matrix precision and dynamic confidence ellipses.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+            <!-- Chapter 7 -->
+            <a href="html_files/Chapter7Dirichlet.html" class="chapter-card">
+                <div class="chapter-number">Chapter 7</div>
+                <h2 class="chapter-title">Multinomial-Dirichlet</h2>
+                <p class="chapter-desc">Modeling multi-category data (e.g., A/B/C testing) and high-dimensional tracking.</p>
+                <span class="read-more">Read Chapter &rarr;</span>
+            </a>
+
+        </div>
+    </div>
+
+    <footer>
+        Built with Python, NumPy, SciPy, and Matplotlib. Hosted on GitHub Pages.
+    </footer>
+
+</body>
+</html>
