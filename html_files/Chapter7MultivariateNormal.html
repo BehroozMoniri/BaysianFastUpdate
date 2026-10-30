@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 7: Categorical & High-Dimensional Models</title>
+
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #16a085; /* Teal for higher dimensions */
+            --bg-color: #f8f9fa;
+            --text-color: #333333;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        h1 { color: var(--primary-color); }
+        h2 { color: var(--accent-color); margin-top: 2rem; }
+        h3 { color: var(--primary-color); }
+
+        .equation-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        code { font-family: 'Courier New', Courier, monospace; }
+
+        .notice {
+            background-color: #e8f8f5;
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Chapter 7: Categorical & High-Dimensional Models</h1>
+        <p><em>Multinomial-Dirichlet and Multivariate Normal Conjugate Models</em></p>
+    </header>
+
+    <!-- ==========================================
+         SECTION 1: MULTINOMIAL-DIRICHLET
+    =========================================== -->
+    <section>
+        <h2>Part 1: The Multinomial-Dirichlet Model</h2>
+        <p>So far, we have looked at binary outcomes (Binomial) and continuous numbers (Normal). But what if we have a system with <strong>multiple categories</strong>? For example, predicting whether a user will "Click", "Skip", or "Close" an ad (3 categories), or classifying a document into one of 10 topics.</p>
+
+        <h3>The Mathematics</h3>
+        <p>For \(K\) categories, we observe a vector of counts \(\mathbf{x} = [x_1, x_2, \dots, x_K]\). The probability of each category is given by a vector \(\mathbf{p} = [p_1, p_2, \dots, p_K]\), where \(\sum p_i = 1\).</p>
+
+        <p><strong>Likelihood (Multinomial):</strong> \(P(\mathbf{x} \mid \mathbf{p}) \propto \prod_{i=1}^K p_i^{x_i}\)</p>
+        <p><strong>Prior (Dirichlet):</strong> This is the multivariate generalization of the Beta distribution. It is defined by a vector of parameters \(\boldsymbol{\alpha} = [\alpha_1, \dots, \alpha_K]\).</p>
+        <div class="equation-container">
+            \[
+ P(\mathbf{p}) \propto \prod_{i=1}^K p_i^{\alpha_i - 1}
+\]
+        </div>
+
+        <p><strong>Posterior:</strong> Multiplying the prior by the likelihood gives us a new Dirichlet distribution. The update is incredibly simple: <em>just add the counts to the \(\alpha\) vector.</em></p>
+        <div class="equation-container">
+            \[
+ \alpha_{i, \text{new}} = \alpha_{i, \text{prior}} + x_i
+\]
+        </div>
+        <p>The expected probability of category \(i\) is \(E[p_i] = \frac{\alpha_i}{\sum_{j=1}^K \alpha_j}\).</p>
+
+        <h3>Adding the Forgetting Factor</h3>
+        <p>Just like the Beta-Binomial model, if user preferences change, the Dirichlet model will be too stubborn to adapt. We apply a forgetting factor \(f\) to the entire \(\boldsymbol{\alpha}\) vector before adding the new counts:</p>
+        <div class="notice">
+            <strong>The Dynamic Dirichlet Update:</strong><br>
+            \[
+ \alpha_{i, \text{new}} = (f \cdot \alpha_{i, \text{prior}}) + x_i
+\]
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 2: MULTIVARIATE NORMAL
+    =========================================== -->
+    <section>
+        <h2>Part 2: The Multivariate Normal Model</h2>
+        <p>In Chapter 6, we tracked a target in 2D space using a Bivariate Normal model. But self-driving cars and aircraft must track objects in <strong>3D space</strong> (X, Y, Z) or even higher dimensions (adding velocity, acceleration, etc.).</p>
+
+        <h3>The Mathematics (D-Dimensions)</h3>
+        <p>The math is a direct, beautiful generalization of the 2D model. Instead of a 2x2 covariance matrix, we use a \(D \times D\) matrix.
+        <p><strong>Precision Matrix:</strong> We compute the inverse of the covariance matrix, \(\Lambda = \Sigma^{-1}\).</p>
+        <p>When we observe a new \(D\)-dimensional data point \(\mathbf{x}\), the precision matrix (which is now a \(D \times D\) matrix) and the mean vector (of size \(D\)) are updated as follows:</p>
+        <div class="equation-container">
+            \[
+ \Lambda_{\text{new}} = \Lambda_{\text{prior}} + \Lambda_{\text{data}}
+\]
+            \[
+ \boldsymbol{\mu}_{\text{new}} = \Lambda_{\text{new}}^{-1} (\Lambda_{\text{prior}} \boldsymbol{\mu}_{\text{prior}} + \Lambda_{\text{data}} \mathbf{x})
+\]
+        </div>
+
+        <h3>Adding the Forgetting Factor</h3>
+        <p>To make a 3D radar track a fast-moving missile, we discount the prior precision matrix by multiplying it by \(f\) (e.g., \(f=0.90\)). This inflates the 3D confidence ellipsoid, allowing the model to quickly shift to the new location.</p>
+        <div class="notice">
+            <strong>The Dynamic Multivariate Update:</strong><br>
+            \[
+ \Lambda_{\text{prior, discounted}} = f \times \Lambda_{\text{prior}}
+\]
+            \[
+ \Lambda_{\text{new}} = \Lambda_{\text{prior, discounted}} + \Lambda_{\text{data}}
+\]
+        </div>
+    </section>
+
+    <!-- ==========================================
+         VISUALIZATION & CODE
+    =========================================== -->
+    <section>
+        <h2>Visualizing the Dirichlet Model</h2>
+        <p>The graph below shows a 3-category system (e.g., a user choosing between <em>Red, Green, or Blue</em>). Initially, the true probabilities are <strong>[0.2, 0.5, 0.3]</strong>. At step 50, a UI redesign causes the probabilities to shift to <strong>[0.7, 0.2, 0.1]</strong>. </p>
+        <p>Notice how the forgetting factor (\(f=0.85\)) allows the models to completely forget the old preferences and smoothly converge on the new reality.</p>
+
+        <!-- Image link -->
+        <img src="../images/dirichlet_graph.png" alt="Dirichlet Model Graph" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 1.5rem 0;">
+
+        <h3>Python Implementation (Dirichlet)</h3>
+        <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# Ensure the images directory exists
+os.makedirs('images', exist_ok=True)
+
+class FastOnlineDirichletModel:
+    def __init__(self, n_categories, alpha_prior=1.0, forgetting_factor=1.0):
+        # Initialize the alpha vector with 1.0 for each category (uniform prior)
+        self.alphas = np.ones(n_categories) * alpha_prior
+        self.ff = forgetting_factor
+
+    def update(self, counts_vector):
+        # Apply forgetting factor to the entire alpha vector, then add new counts
+        self.alphas = (self.alphas * self.ff) + counts_vector
+
+    def get_expected_probabilities(self):
+        # The expected probability for each category is alpha_i / sum(alphas)
+        return self.alphas / np.sum(self.alphas)
+
+# 1. GENERATE DATA (True probs jump at step 50)
+np.random.seed(42)
+n_steps = 100
+n_categories = 3
+
+# Phase 1: Red=20%, Green=50%, Blue=30%
+# Phase 2: Red=70%, Green=20%, Blue=10%
+data_list = []
+for i in range(n_steps):
+    if i < 50:
+        true_probs = [0.2, 0.5, 0.3]
+    else:
+        true_probs = [0.7, 0.2, 0.1]
+
+    # Simulate 10 observations per step
+    counts = np.random.multinomial(10, true_probs)
+    data_list.append(counts)
+
+# 2. INITIALIZE MODELS
+std_model = FastOnlineDirichletModel(n_categories, forgetting_factor=1.0)
+fast_model = FastOnlineDirichletModel(n_categories, forgetting_factor=0.85)
+
+# Lists for plotting
+std_probs_history = []
+fast_probs_history = []
+
+# 3. RUN SIMULATION
+for counts in data_list:
+    std_model.update(counts)
+    fast_model.update(counts)
+
+    std_probs_history.append(std_model.get_expected_probabilities())
+    fast_probs_history.append(fast_model.get_expected_probabilities())
+
+# Convert to numpy arrays for easier slicing
+std_probs_history = np.array(std_probs_history)
+fast_probs_history = np.array(fast_probs_history)
+
+# 4. PLOT
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+
+# Top plot: Standard Model (Slow)
+ax1.plot(range(1, n_steps + 1), std_probs_history[:, 0], color='red', label='Category 1 (Red)')
+ax1.plot(range(1, n_steps + 1), std_probs_history[:, 1], color='green', label='Category 2 (Green)')
+ax1.plot(range(1, n_steps + 1), std_probs_history[:, 2], color='blue', label='Category 3 (Blue)')
+ax1.axvline(x=50, color='black', linestyle='--', alpha=0.5)
+ax1.set_title('Standard Dirichlet Model (Stationary Assumption)', fontsize=12)
+ax1.set_ylabel('Probability')
+ax1.legend(loc='upper left')
+ax1.grid(True, alpha=0.3)
+
+# Bottom plot: Fast Model (Forgetting)
+ax2.plot(range(1, n_steps + 1), fast_probs_history[:, 0], color='red', label='Category 1 (Red)')
+ax2.plot(range(1, n_steps + 1), fast_probs_history[:, 1], color='green', label='Category 2 (Green)')
+ax2.plot(range(1, n_steps + 1), fast_probs_history[:, 2], color='blue', label='Category 3 (Blue)')
+ax2.axvline(x=50, color='black', linestyle='--', alpha=0.5)
+ax2.set_title('Fast Dirichlet Model (Forgetting Factor = 0.85)', fontsize=12)
+ax2.set_xlabel('Time Step (Batches of 10 Trials)')
+ax2.set_ylabel('Probability')
+ax2.legend(loc='upper left')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+
+# Save to the images folder
+plt.savefig('images/dirichlet_graph.png', dpi=300, bbox_inches='tight')
+plt.show()</code></pre>
+    </section>
+
+</body>
+</html>

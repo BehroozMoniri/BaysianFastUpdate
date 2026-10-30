@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 2: Dynamic Updating for Success Rates (Binomial-Beta)</title>
+
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60; /* Changed to green for Binomial */
+            --bg-color: #f8f9fa;
+            --text-color: #333333;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        h1 { color: var(--primary-color); }
+        h2 { color: var(--accent-color); margin-top: 2rem; }
+        h3 { color: var(--primary-color); }
+
+        .equation-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        code { font-family: 'Courier New', Courier, monospace; }
+
+        .notice {
+            background-color: #e8f8f5;
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Chapter 2: Dynamic Updating for Success Rates</h1>
+        <p><em>Binomial-Beta Conjugate Models with Exponential Forgetting</em></p>
+    </header>
+
+    <section>
+        <h2>1. Introduction</h2>
+        <p>In machine learning, we frequently encounter binary outcomes: Did the user click the ad or not? Is the email spam or not? Did the patient recover or not? The standard statistical tool for modeling the probability of success in a sequence of independent trials is the <strong>Binomial distribution</strong>.</p>
+        <p>In this chapter, we explore the <strong>Beta-Binomial</strong> model, which is a cornerstone of Bayesian A/B testing. We will show how the standard conjugate prior can be modified with a forgetting factor to create a dynamic model that instantly adapts to changing user behaviors.</p>
+    </section>
+
+    <section>
+        <h2>2. The Standard Mathematical Setup</h2>
+        <p>We want to estimate the unknown probability of success, \(p\). (e.g., the true click-through rate of an advertisement).</p>
+
+        <h3>The Likelihood (Binomial)</h3>
+        <p>Suppose we run \(n\) trials and observe \(k\) successes. The likelihood is:</p>
+        <div class="equation-container">
+            \[
+ P(k \mid p, n) = \binom{n}{k} p^k (1-p)^{n-k} \propto p^k (1-p)^{n-k}
+\]
+        </div>
+
+        <h3>The Prior (Beta)</h3>
+        <p>Because \(p\) must be a probability between 0 and 1, we use the <strong>Beta distribution</strong> as our conjugate prior. It is defined by two shape parameters, \(\alpha\) and \(\beta\):</p>
+        <div class="equation-container">
+            \[
+ P(p) \propto p^{\alpha-1} (1-p)^{\beta-1}
+\]
+        </div>
+        <p><em>Note: A uniform prior is achieved by setting \(\alpha=1, \beta=1\).</em></p>
+
+        <h3>The Posterior (Bayes' Theorem)</h3>
+        <p>Multiplying the Likelihood and the Prior yields the Posterior:</p>
+        <div class="equation-container">
+            \[
+ P(p \mid k, n) \propto \left( p^k (1-p)^{n-k} \right) \times \left( p^{\alpha-1} (1-p)^{\beta-1} \right)
+\]
+            \[
+ P(p \mid k, n) \propto p^{(\alpha + k) - 1} (1-p)^{(\beta + n - k) - 1}
+\]
+        </div>
+        <p>The result is another Beta distribution with updated parameters:</p>
+        <ul>
+            <li><strong>\(\alpha_{\text{new}} = \alpha_{\text{prior}} + k\)</strong> (Prior successes + new successes)</li>
+            <li><strong>\(\beta_{\text{new}} = \beta_{\text{prior}} + (n - k)\)</strong> (Prior failures + new failures)</li>
+        </ul>
+        <p>The Expected Probability is the mean of the Beta distribution: \(E[p] = \frac{\alpha}{\alpha + \beta}\).</p>
+    </section>
+
+    <section>
+        <h2>3. The Limitation: The Stationarity Assumption</h2>
+        <p>If the true probability of success is constant, the Beta-Binomial model is mathematically perfect. However, in dynamic environments (like changing user preferences or seasonal trends), the true probability shifts.</p>
+        <p>If a website has shown a 20% click rate for thousands of users, the model's parameters will be heavily skewed (e.g., \(\alpha=200, \beta=800\)). If a new UI redesign increases the true click rate to 70%, the model will be very slow to believe it. It will take hundreds of new observations to overcome its "memory" of the past.</p>
+    </section>
+
+    <section>
+        <h2>4. The Improvement: Exponential Forgetting</h2>
+        <p>To allow the Beta-Binomial model to track moving targets, we introduce a <strong>forgetting factor</strong> \(f\) (where \(0 < f \le 1\)). Before adding the new data, we multiply our accumulated successes and failures by \(f\).</p>
+
+        <div class="notice">
+            <strong>The Dynamic Update Rule:</strong><br>
+            \[
+ \alpha_{\text{new}} = (f \cdot \alpha_{\text{prior}}) + \text{successes}
+\]
+            \[
+ \beta_{\text{new}} = (f \cdot \beta_{\text{prior}}) + \text{failures}
+\]
+        </div>
+        <p>If \(f = 0.9\), the model only retains 90% of its historical memory at every step. This creates a "sliding window" effect, allowing the model to forget outdated behavior and quickly lock onto a new probability.</p>
+    </section>
+
+    <section>
+        <h2>5. Visualizing the Difference</h2>
+        <p>The following simulation represents an online A/B test. We test 10 users per time step. For the first 50 steps, the true conversion rate is <strong>20%</strong>. At step 50, a new feature is launched, and the true rate jumps to <strong>70%</strong>.</p>
+
+        <!-- Image link -->
+        <img src="../images/binomial_graph.png" alt="Binomial-Beta Model Graph" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 1.5rem 0;">
+
+        <h3>Python Implementation</h3>
+        <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta
+import os
+
+# Ensure the images directory exists
+os.makedirs('images', exist_ok=True)
+
+class FastOnlineBinomialModel:
+    def __init__(self, alpha_prior=1.0, beta_prior=1.0, forgetting_factor=1.0):
+        self.alpha = alpha_prior
+        self.beta = beta_prior
+        self.ff = forgetting_factor
+
+    def update(self, successes, trials):
+        failures = trials - successes
+        # Apply forgetting factor to old memory, then add new data
+        self.alpha = (self.alpha * self.ff) + successes
+        self.beta = (self.beta * self.ff) + failures
+
+    def get_expected_probability(self):
+        return self.alpha / (self.alpha + self.beta)
+
+    def get_credible_interval(self, confidence=0.95):
+        lp = (1.0 - confidence) / 2.0
+        up = 1.0 - lp
+        return beta.ppf(lp, self.alpha, self.beta), beta.ppf(up, self.alpha, self.beta)
+
+# 1. GENERATE DATA (True prob jumps from 0.2 to 0.7 at step 50)
+np.random.seed(42)
+n_steps = 100
+trials_per_step = 10
+
+data_list = []
+for i in range(n_steps):
+    true_p = 0.2 if i < 50 else 0.7
+    data_list.append(np.random.binomial(trials_per_step, true_p))
+
+# 2. INITIALIZE MODELS
+standard_model = FastOnlineBinomialModel(forgetting_factor=1.0) # Static
+fast_model = FastOnlineBinomialModel(forgetting_factor=0.85)     # Dynamic
+
+# Lists for plotting
+std_probs, fast_probs = [], []
+fast_lb, fast_ub = [], []
+
+# 3. RUN SIMULATION
+for successes in data_list:
+    standard_model.update(successes, trials_per_step)
+    fast_model.update(successes, trials_per_step)
+
+    std_probs.append(standard_model.get_expected_probability())
+    fast_probs.append(fast_model.get_expected_probability())
+    lb, ub = fast_model.get_credible_interval()
+    fast_lb.append(lb); fast_ub.append(ub)
+
+# 4. PLOT
+plt.figure(figsize=(12, 6))
+plt.plot(range(1, n_steps + 1), [0.2]*50 + [0.7]*50, 'k--', linewidth=2, label='True Probability')
+plt.plot(range(1, n_steps + 1), std_probs, 'b-', linewidth=2, alpha=0.5, label='Standard Bayes (Slow)')
+plt.plot(range(1, n_steps + 1), fast_probs, 'g-', linewidth=2.5, label='Forgetting Model (Fast)')
+plt.fill_between(range(1, n_steps + 1), fast_lb, fast_ub, color='green', alpha=0.15, label='Fast Model 95% CI')
+
+plt.title('Speeding up Binomial-Beta Learning via Forgetting Factor', fontsize=14)
+plt.xlabel('Time Step (Batches of 10 Trials)')
+plt.ylabel(r'Probability of Success (\(p\))')
+plt.ylim(-0.05, 1.05)
+plt.legend(loc='upper left')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+
+# Save to the images folder
+plt.savefig('images/binomial_graph.png', dpi=300, bbox_inches='tight')
+plt.show()</code></pre>
+    </section>
+
+</body>
+</html>

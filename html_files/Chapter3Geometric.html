@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 3: Dynamic Updating for Waiting Times (Geometric-Beta)</title>
+
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #8e44ad; /* Purple for Geometric */
+            --bg-color: #f8f9fa;
+            --text-color: #333333;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        h1 { color: var(--primary-color); }
+        h2 { color: var(--accent-color); margin-top: 2rem; }
+        h3 { color: var(--primary-color); }
+
+        .equation-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        code { font-family: 'Courier New', Courier, monospace; }
+
+        .notice {
+            background-color: #f4ecf7;
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Chapter 3: Dynamic Updating for Waiting Times</h1>
+        <p><em>Geometric-Beta Conjugate Models with Exponential Forgetting</em></p>
+    </header>
+
+    <section>
+        <h2>1. Introduction</h2>
+        <p>While the Poisson and Binomial models look at how many events occur in a fixed time, the <strong>Geometric distribution</strong> looks at the opposite: <em>how long you have to wait until the first event occurs</em>.</p>
+        <p>This is used extensively in reliability engineering (e.g., "How many days until a machine breaks?") and user experience tracking (e.g., "How many times will a user click 'Next' before they abandon the webpage?"). This chapter explores the <strong>Geometric-Beta</strong> model and how a forgetting factor allows it to detect sudden shifts in user patience or system reliability.</p>
+    </section>
+
+    <section>
+        <h2>2. The Standard Mathematical Setup</h2>
+        <p>We want to estimate the probability of success, \(p\), based on the number of failures \(x\) observed before the very first success.</p>
+
+        <h3>The Likelihood (Geometric)</h3>
+        <p>The probability of observing \(x\) failures followed by one success is:</p>
+        <div class="equation-container">
+            \[
+ P(x \mid p) = (1-p)^x p
+\]
+        </div>
+
+        <h3>The Prior (Beta)</h3>
+        <p>Just like the Binomial model, the conjugate prior for the success probability \(p\) is the <strong>Beta distribution</strong>:</p>
+        <div class="equation-container">
+            \[
+ P(p) \propto p^{\alpha-1} (1-p)^{\beta-1}
+\]
+        </div>
+
+        <h3>The Posterior (Bayes' Theorem)</h3>
+        <p>Multiplying the likelihood by the prior yields:</p>
+        <div class="equation-container">
+            \[
+ P(p \mid x) \propto \left( (1-p)^x p \right) \times \left( p^{\alpha-1} (1-p)^{\beta-1} \right)
+\]
+            \[
+ P(p \mid x) \propto p^{(\alpha + 1) - 1} (1-p)^{(\beta + x) - 1}
+\]
+        </div>
+        <p>Because we observed exactly <strong>1 success</strong> and <strong>\(x\) failures</strong>, the posterior is updated as follows:</p>
+        <ul>
+            <li><strong>\(\alpha_{\text{new}} = \alpha_{\text{prior}} + 1\)</strong> (Add 1 for the eventual success)</li>
+            <li><strong>\(\beta_{\text{new}} = \beta_{\text{prior}} + x\)</strong> (Add the number of failures observed)</li>
+        </ul>
+        <p>The Expected Probability of success remains \(E[p] = \frac{\alpha}{\alpha + \beta}\).</p>
+    </section>
+
+    <section>
+        <h2>3. The Limitation: The Stationarity Assumption</h2>
+        <p>If you are analyzing a system that never changes, the standard Geometric-Beta model is perfectly optimal. But what if user behavior shifts? </p>
+        <p>Suppose a "Skip" button is clicked rapidly (very few failures before success). If we redesign the UI and users suddenly get confused, they will click the button much later (many failures before success). The standard model will take a very long time to realize that the underlying probability of success has dropped because it is stubbornly clinging to its historical data.</p>
+    </section>
+
+    <section>
+        <h2>4. The Improvement: Exponential Forgetting</h2>
+        <p>To make the model agile, we introduce a <strong>forgetting factor</strong> \(f\). Before updating with the new data, we shrink our historical memory.</p>
+
+        <div class="notice">
+            <strong>The Dynamic Update Rule:</strong><br>
+            \[
+ \alpha_{\text{new}} = (f \cdot \alpha_{\text{prior}}) + 1
+\]
+            \[
+ \beta_{\text{new}} = (f \cdot \beta_{\text{prior}}) + \text{failures}
+\]
+        </div>
+        <p>By continuously discounting old data, the model dynamically tracks the current state of the system, forgetting behavior that is no longer relevant.</p>
+    </section>
+
+    <section>
+        <h2>5. Visualizing the Difference</h2>
+        <p>In this simulation, an interface starts with a true success probability of <strong>30%</strong> (meaning users typically experience 2 or 3 failures before success). At experiment 50, a new interface is introduced that is much more intuitive, jumping the success probability to <strong>80%</strong> (users succeed almost immediately).</p>
+
+        <!-- Image link (Relative path for the html_files folder) -->
+        <img src="../images/geometric_graph.png" alt="Geometric-Beta Model Graph" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 1.5rem 0;">
+
+        <h3>Python Implementation</h3>
+        <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta
+import os
+
+# Ensure the images directory exists
+os.makedirs('images', exist_ok=True)
+
+class FastOnlineGeometricModel:
+    def __init__(self, alpha_prior=1.0, beta_prior=1.0, forgetting_factor=1.0):
+        self.alpha = alpha_prior
+        self.beta = beta_prior
+        self.ff = forgetting_factor
+
+    def update(self, failures):
+        # Apply forgetting factor to old memory, then add new data
+        self.alpha = (self.alpha * self.ff) + 1
+        self.beta = (self.beta * self.ff) + failures
+
+    def get_expected_probability(self):
+        return self.alpha / (self.alpha + self.beta)
+
+    def get_credible_interval(self, confidence=0.95):
+        lp = (1.0 - confidence) / 2.0
+        up = 1.0 - lp
+        return beta.ppf(lp, self.alpha, self.beta), beta.ppf(up, self.alpha, self.beta)
+
+# 1. GENERATE DATA (True prob jumps from 0.3 to 0.8 at step 50)
+np.random.seed(42)
+n_steps = 100
+true_p_phase1 = 0.3
+true_p_phase2 = 0.8
+
+data_list = []
+for i in range(n_steps):
+    true_p = true_p_phase1 if i < 50 else true_p_phase2
+    # np.random.geometric returns total trials (k >= 1). Failures = trials - 1
+    trials = np.random.geometric(true_p)
+    data_list.append(trials - 1)
+
+# 2. INITIALIZE MODELS
+standard_model = FastOnlineGeometricModel(forgetting_factor=1.0) # Static
+fast_model = FastOnlineGeometricModel(forgetting_factor=0.85)     # Dynamic
+
+# Lists for plotting
+std_probs, fast_probs = [], []
+fast_lb, fast_ub = [], []
+
+# 3. RUN SIMULATION
+for failures in data_list:
+    standard_model.update(failures)
+    fast_model.update(failures)
+
+    std_probs.append(standard_model.get_expected_probability())
+    fast_probs.append(fast_model.get_expected_probability())
+    lb, ub = fast_model.get_credible_interval()
+    fast_lb.append(lb); fast_ub.append(ub)
+
+# 4. PLOT
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [1, 2]})
+
+# Top plot: Raw Failures
+ax1.bar(range(1, n_steps + 1), data_list, color='gray', alpha=0.6)
+ax1.set_title('Raw Observations: Failures Before Success', fontsize=12)
+ax1.set_ylabel('Failures (x)')
+ax1.grid(True, alpha=0.3)
+
+# Bottom plot: Probability tracking
+ax2.plot(range(1, n_steps + 1), [0.3]*50 + [0.8]*50, 'k--', linewidth=2, label='True Probability')
+ax2.plot(range(1, n_steps + 1), std_probs, 'b-', linewidth=2, alpha=0.5, label='Standard Bayes (Slow)')
+ax2.plot(range(1, n_steps + 1), fast_probs, 'purple', linewidth=2.5, label='Forgetting Model (Fast)')
+ax2.fill_between(range(1, n_steps + 1), fast_lb, fast_ub, color='purple', alpha=0.15, label='Fast Model 95% CI')
+
+ax2.set_title('Speeding up Geometric-Beta Learning via Forgetting Factor', fontsize=14)
+ax2.set_xlabel('Experiment Number')
+ax2.set_ylabel(r'Probability of Success (\(p\))')
+ax2.set_ylim(-0.05, 1.05)
+ax2.legend(loc='upper left')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+
+# Save to the images folder
+plt.savefig('images/geometric_graph.png', dpi=300, bbox_inches='tight')
+plt.show()</code></pre>
+    </section>
+
+</body>
+</html>
