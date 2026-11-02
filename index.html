@@ -55,7 +55,8 @@
 \]
             </div>
 
-            <p>By sacrificing pure Bayesian optimality, we gain the agility to track moving targets, changing click-through rates, and dynamic server loads—the exact techniques used in modern Kalman Filters and Multi-Armed Bandits.</p>
+            <p>By sacrificing pure Bayesian optimality, we gain the agility to track moving targets, changing click-through rates, 
+                and dynamic server loads—the exact techniques used in modern Kalman Filters and Multi-Armed Bandits.</p>
 
             <h2 style="margin-top: 3rem;">Real-World Applications</h2>
             <p>Each model in this series is tailored to a specific type of data. Here is how they are applied in the real world:</p>
@@ -78,7 +79,7 @@
             <div class="real-world-box">
                 <strong>3. Geometric-Beta:</strong> <span class="badge" style="background: #8e44ad;">Discrete</span> <br>
                 <strong>Measures:</strong> Discrete time/steps (Failures before the 1st success).<br>
-                <strong>Use:</strong> Modeling user patience. Examples include clicks before abandoning a webpage, products inspected before finding a defect, or free throws missed before scoring.
+                <strong>Use:</strong> Modeling user patience. Examples include clicks before abandoning a webpage, products inspected before finding a defect, or number of throws missed before scoring.
             </div>
 
             <!-- Chapter 4 -->
@@ -113,7 +114,10 @@
             <div class="real-world-box">
                 <strong>8. Negative Binomial:</strong> <span class="badge" style="background: #4b0082;">Discrete</span> <br>
                 <strong>Measures:</strong> Discrete time/steps (Failures before \(r\) successes).<br>
-                <strong>Use:</strong> Used when a process must hit a specific target. Modeling accident-free months before a driver files 3 claims, or users seeing an ad before achieving 5 conversions.
+                <strong>Use:</strong> Used when a process must hit a specific target. Modeling accident-free months before a driver files 3 claims, or users seeing an ad before achieving 5 conversions. Negative Binomial is similar to Geometric Model, where the number of trial is not fixed, but instead of a single success, 
+                there is a specific number of successes that may occur in any order, hence the use of binomial coefficient. 
+                The negative binomial distribution gives you the probability of achieving a fixed number of successes (\(r\)) 
+                on a specific total number of trials (\(x\)) (or alternatively, having a specific number of failures before that \(r\)-th success). <a href="https://en.wikipedia.org/wiki/Negative_binomial_distribution" >Wikipedia</a>
             </div>
 
         </div>
